@@ -1,0 +1,24 @@
+{
+  "repositories": [
+    {
+      "type":"vcs",
+      "url":"https://github.com/jeffcpina/officeintegrator"
+    },
+    {
+      "type":"vcs",
+      "url":"https://github.com/jeffcpina/fmRest"
+    }
+  ],
+    "require-dev": {
+        "airmoi/yii2-fmconnector":" ^2.3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Src\\": "src/"
+        }
+    },
+  "require": {
+    "verot/class.upload.php": "dev-master"
+  },
+  "minimum-stability": "dev",
+}
