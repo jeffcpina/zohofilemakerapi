@@ -16,15 +16,16 @@ class DocController {
 
     public function __construct($requestMethod)
     {
-        $this->requestMethod = $requestMethod;
         $this->fm_config_data();
+        $this->requestMethod = $requestMethod;
+
     }
 
     public function processRequest()
     {
         switch ($this->requestMethod) {
             case 'GET':
-                $response = $this->unprocessableEntityResponse();
+                $response = $this->test_data();
                 break;
             case 'POST':
                 $response = $this->processDocument();
@@ -47,12 +48,7 @@ class DocController {
 
     private function test_data(){
         echo "here";
-        $handle = new Upload($_FILES['content']);
 
-        $layout = "Raw Website Users";
-        if ($layout=="") throw new exception("No layout found");
-        $this->db_table = new fmREST ($this->host, $this->db, $this->user, $this->pass, $layout);
-        print_r(get_declared_classes () );
         die;
     }
 
@@ -130,10 +126,10 @@ class DocController {
         return $table;
     }
     function fm_config_data(){
-        $this->host = 'fms.reachmakers.com';
-        $this->db = 'Bugly';
-        $this->user = 'admin';
-        $this->pass = 'rtgi01';
+        $this->host = $_ENV["FM_HOST"];
+        $this->db = $_ENV['FM_DB'];
+        $this->user = $_ENV['FM_USER'];
+        $this->pass = $_ENV['FM_PASS'];
     }
     function save_data_to_fm($table_data, $user_layout)
     {

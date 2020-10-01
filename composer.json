@@ -12,7 +12,8 @@
     ],
     "require": {
         "jeffcpina/fmrest": "dev-master",
-        "verot/class.upload.php": "dev-master"
+        "verot/class.upload.php": "dev-master",
+        "vlucas/phpdotenv": "^5.2@dev"
     },
     "require-dev": {
         "airmoi/yii2-fmconnector":" ^2.3.0"
