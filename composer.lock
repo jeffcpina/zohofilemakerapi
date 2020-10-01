@@ -4,8 +4,48 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "59064f81156b5ec840f337c84e8ef0fb",
+    "content-hash": "357706c70690d46fabcdb76b3227ba72",
     "packages": [
+        {
+            "name": "jeffcpina/fmrest",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jeffcpina/fmrest.git",
+                "reference": "adb9d7dc3965175ea0ba21a79d25d98e5cf3b848"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jeffcpina/fmrest/zipball/adb9d7dc3965175ea0ba21a79d25d98e5cf3b848",
+                "reference": "adb9d7dc3965175ea0ba21a79d25d98e5cf3b848",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "jeffcpina\\fmRest\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Paradise Partners",
+                    "email": "info@sosimplesoftware.com"
+                }
+            ],
+            "description": "Rewritten filemaker PHP-API",
+            "keywords": [
+                "PHP-API",
+                "filemaker"
+            ],
+            "support": {
+                "source": "https://github.com/jeffcpina/fmrest/tree/master",
+                "issues": "https://github.com/jeffcpina/fmrest/issues"
+            },
+            "time": "2020-09-30T23:54:04+00:00"
+        },
         {
             "name": "verot/class.upload.php",
             "version": "dev-master",
@@ -518,6 +558,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
+        "jeffcpina/fmrest": 20,
         "verot/class.upload.php": 20
     },
     "prefer-stable": false,

@@ -1,6 +1,5 @@
 <?php
 require 'vendor/autoload.php';
-require 'init.php';
 
 use Src\Controller\DocController;
 
