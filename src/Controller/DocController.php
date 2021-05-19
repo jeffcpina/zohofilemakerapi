@@ -7,20 +7,46 @@ class DocController {
 
     private $requestMethod;
 
-    //todo move to fmRest config file.
     private $host;
-    private $db;
+    private $name;
     private $user;
     private $pass;
+    private $container;
+    private $fm_db;
 
 
-    public function __construct($requestMethod)
+    public function __construct($requestMethod,$user_layout = "",$container="")
     {
-        $this->fm_config_data();
+        ini_set('display_errors', 1);
+        ini_set('display_startup_errors', 1);
+        error_reporting(E_ALL);
+
+        echo "$user_layout \n\r";
+
+        $path = (isset($_POST["fm_path"])) ? $_POST["fm_path"] . "_" : "";
+        $path = strtoupper($path);
+
+        $this->fm_config_data($container);
         $this->requestMethod = $requestMethod;
 
-    }
+        //layout and container precedence: post, call then env
+        $user_layout = (isset($_POST["fm_layout"])) ? $_POST["fm_layout"] :
+                       (($user_layout != "")        ? $user_layout
+                                                    : $_ENV[$path ."FM_LAYOUT"]);
+        $this->container = (isset($_POST["fm_container"])) ? $_POST["fm_container"] :
+                           (($container != "")             ? $container
+                                                           : $_ENV[$path ."FM_CONTAINER"]);
 
+        $this->fm_db = $this->getFmDatabase($user_layout);
+
+        //$this->show_initial_data();
+    }
+    public function show_initial_data(){
+        echo "Initial Data \n\r Post \n\r";
+        print_r($_POST);
+        print_r($this->fm_db);
+        echo $this->container . "\n\r";
+    }
     public function processRequest()
     {
         switch ($this->requestMethod) {
@@ -47,8 +73,7 @@ class DocController {
     }
 
     private function test_data(){
-        echo "here";
-
+        echo "you got here, now what.";
         die;
     }
 
@@ -67,6 +92,7 @@ class DocController {
         $dir = __DIR__;
         $dir = str_replace("documents/src/Controller","",$dir);
         $upload_dir  = $dir . "uploads/";
+        $path = (isset($_POST["fm_path"])) ? $_POST["fm_path"] : "";
 
         //process upload
         $handle = new Upload($_FILES['content']);
@@ -79,8 +105,8 @@ class DocController {
             $handle->process($upload_dir);
             if ($handle->processed) {
                 try {
-                    $result = $this->upload_container_to_fm ($record_id, $_FILES['content'], "RAW Test Table", false );
-                    $result = ($result == "OK") ? "Document '$filename' saved for $record_id" : $result;
+                    $result = $this->upload_container_to_fm ($record_id, $_FILES['content'], $this->container);
+                    $result = ($result == "OK") ? "Document '$filename' saved" : $result;
                 }
                 catch (Exception $e){
                     $result = $e;
@@ -115,70 +141,78 @@ class DocController {
     }
     function getFmDatabase($layout)
     {
-        ini_set('display_errors', 1);
-        ini_set('display_startup_errors', 1);
-        error_reporting(E_ALL);
-        //$layout = "Raw Website Users";
         if ($layout=="") throw new exception("No layout found");
-        $table = new fmREST ($this->host, $this->db, $this->user, $this->pass, $layout);
+        $table = new fmREST ($this->host, $this->name, $this->user, $this->pass, $layout);
         $table -> show_debug = false; //turn this to true or "html" to show automatically. We're manually including debug information with <print_r ($fm->debug_array);>
         $table -> secure = false; //not required - defaults to true
         return $table;
     }
     function fm_config_data(){
-        $this->host = $_ENV["FM_HOST"];
-        $this->db = $_ENV['FM_DB'];
-        $this->user = $_ENV['FM_USER'];
-        $this->pass = $_ENV['FM_PASS'];
+        $path = (isset($_POST["fm_path"])) ? $_POST["fm_path"] . "_" : "";
+        $path = strtoupper($path);
+        $this->host = $_ENV[$path . "FM_HOST"];
+        $this->name = $_ENV[$path . 'FM_DB'];
+        $this->user = $_ENV[$path . 'FM_USER'];
+        $this->pass = $_ENV[$path . 'FM_PASS'];
     }
-    function save_data_to_fm($table_data, $user_layout)
+    function save_data_to_fm($table_data)
     {
-        $db = $this->getFmDatabase($user_layout);
         $data['fieldData'] = $table_data; //print_r($data);
 
-        $result = $db -> createRecord ( $data ) ; //print_r($result);
+        $result = $this->fm_db -> createRecord ( $data ) ; //print_r($result);
         if ($result['messages'][0]['message'] != "OK") $this->send_error_log($data,$result);
         return $result;
     }
-    function upload_container_to_fm($fm_id, $file, $user_layout, $lookup = true)
+    function upload_container_to_fm($fm_id, $file, $container, $lookup = false)
     {
         $ready = false;
-        $db = $this->getFmDatabase($user_layout);
 
-        //need to find real filemaker id
+        //only if you need to find real filemaker id
         if ($lookup) {
             //find records
-            $request1['id'] = $fm_id;
-            $query = array($request1);
-            $data['query'] = $query;
-            $data['limit'] = 1;
-            $result = $db->findRecords($data);
-
-            //get internal filemaker id
-            if (isset($result["messages"]["code"])) {
-                $fm_id = $result["response"]["data"][0]["recordId"];
-                $ready = true;
-            }
+            $fm_id = $this->find_internal_fm_id($fm_id);
+            $ready = ($fm_id != "Error") ? true : false;
         }
         else {
             $ready = true;
         }
 
         if ($ready) {
-            $result = $db -> uploadContainer ($fm_id, 'Document_Container', $file );
+            $response = $result = $this->fm_db -> uploadContainer ($fm_id, $container, $file );
         }
         if (isset($result["messages"][0]["code"])) {
             if ($result["messages"][0]["code"] == 0) {
                 $result = "OK";
             }
             else {
+                $response = $result;
+                $response["source"] = $this->fm_db;
                 $code = $result["messages"][0]["code"];
-                $result = "Document did not save. Please contact your IT admin. Code: $code";
+                $result = "Document did not save. Please contact your IT admin. Code: fm-$code";
+                $result = $result . print_r($response, true);
             }
         }
-        else $result = "Document did not save. Please contact your IT admin. Code: 2022";
+        else $result = "Document did not save. Please contact your IT admin. Code: sc-2022";
 
         return $result;
     }
-
+    function find_internal_fm_id($fm_id)
+    {
+        //find records
+        $request1['id'] = $fm_id;
+        $query = array($request1);
+        $data['query'] = $query;
+        $data['limit'] = 1;
+        $result = $this->fm_db->findRecords($data);
+        //print_r($result);
+        //get internal filemaker id
+        if ($result["messages"][0]["code"] == 0) {
+            $fm_id = $result["response"]["data"][0]["recordId"];
+        }
+        else{
+            $fm_id = "Error";
+        }
+        //print_r($result);
+        return $fm_id;
+    }
 }

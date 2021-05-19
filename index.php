@@ -1,10 +1,12 @@
 <?php
 require 'vendor/autoload.php';
+//get directory above website root
+$env_dir = dirname($_SERVER['DOCUMENT_ROOT'])."/";
 
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv = Dotenv\Dotenv::createImmutable($env_dir);
 $dotenv->load();
-
 use Src\Controller\DocController;
+
 
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
